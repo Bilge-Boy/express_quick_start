@@ -1,49 +1,52 @@
 const fs = require('fs');
+const { usersCollection } = require('../db');
 
 /*
     given an interface of user (from above) make the following functions:
     add, delete, get, update
 */
 
-function getUsers() {
-    return require('../db/users.json');
+async function getUsers() {
+    return await usersCollection().find({}).toArray();
 }
 
-function setUsers(users) {
-    fs.writeFileSync("./db/users.json", JSON.stringify(users));
+async function setUsers(users) {
+    await usersCollection().insertMany(users);
 }
 
-function add(user) {
-    const foundUser = getUser(user.email);
-    const users = getUsers();
-    if (!foundUser) {
-        const newUser = {
-            name: user.name,
-            email: user.email,
-            password: user.password
-        }
-        users.push(newUser);
-        setUsers(users);
-        return true;
-    }
-    return false;
-}
-
-function getUser(email) {
-    const users = getUsers();
-    const foundUser = users.find(existingUser => existingUser.email === email);
+async function getUser(name) {
+    const foundUser = await usersCollection().findOne({name}); //= users.find(existingUser => existingUser.name === name);
     return foundUser;
 }
 
-function deleteUser(email) {
-    const users = getUsers();
-    const filteredUsers = users.filter(existingUser => existingUser.email !== email);
-    setUsers(filteredUsers);
+async function add(user) {
+    if (isUserExist(user)) {
+        return false;
+    } else if(user.name && user.email && user.password){
+        usersCollection().insertOne({name:user.name, "email":user.email, "password":user.password});
+        return true;
+    }
 }
 
-function update(email, data) {
-    const users = getUsers();
-    const foundUser = users.find(existingUser => existingUser.email === email);
+function isUserExist(user){
+    const isIt =  getUser(user.name);
+    console.log(isIt)
+    if(isIt){
+        return false;
+    } else {
+        console.log("u are true");
+        return true;
+    }
+}
+
+async function deleteUser(email) {
+    // const users = getUsers();
+    // const filteredUsers = users.filter(existingUser => existingUser.email !== email);
+    //setUsers(filteredUsers);
+    return await usersCollection().deleteOne({"email":email})
+}
+async function update(email, data) {
+    const foundUser = await getUser(email);
     if (!foundUser) return false;
     Object.keys(foundUser).forEach(key => {
         if (data[key]) {
@@ -54,16 +57,13 @@ function update(email, data) {
     return foundUser;
 }
 
-function getAll() {
-    return getUsers();
-}
 
 module.exports = {
     update,
-    getAll,
     getUser,
     deleteUser,
-    add
+    add,
+    getUsers
 }
 
 

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const couponServ = require('../services/couponService');
-const { route } = require('./userRoutes');
+
 
 
 router.get('/', (req,res)=>{
@@ -28,7 +28,9 @@ router.get('/:code',(req,res)=>{
 })
 
 router.put('/:code',(req,res)=>{
-    const coupon = couponServ.updateCoupon(req.body,req.params.code);
+    const body = req.body;
+    const {code} = req.params;
+    const coupon = couponServ.updateCoupon(body ,code);
     if(!coupon){
         res.status(201).send("updated successfully");
     }
@@ -38,7 +40,8 @@ router.put('/:code',(req,res)=>{
 })
 
 router.delete('/:code', (req,res)=>{
-    const isDeleted = couponServ.deleteCoupon(req.params.code);
+    const {code} = req.params;
+    const isDeleted = couponServ.deleteCoupon(code);
     
     if(!isDeleted) res.send("deleted successfully");
     else res.send("something went wrong");
